@@ -1,6 +1,6 @@
 (function (api) {
-    //~ var debug = true;
-    var debug = false;
+    // let debug = true;
+    let debug = false;
 
     function log(msg) {
         if (debug) {
@@ -8,34 +8,52 @@
         }
     }
 
-    function move0( id, index) {
+    function topit( id, info) {
+        log(`move ${info.index} => 0`);
         api.move(id, {index: 0});
-        log(`move: ${index} -> 0`);
     }
 
-    function created(id, info) {
-        //~ Move it to top in the default bookmark folder.
-        move0(id, info.index);
-    }
+    async function onCreated(id, info) {
+        try {
+            log(`ev: created ${info.type}, index ${info.index}`);
 
-    function moved(id, info) {
-        //~ Ignore move to top event.
-        if (info.index === 0) {
-            return;
-        }
-
-        log(`event: ${info.oldIndex} -> ${info.index}`);
-
-        api.getChildren(info.parentId).then(function (list) {
-            if (info.index === list.length - 1) {
-                //~ Move it to top from the very bottom.
-                move0(id, info.index);
+            let siblings = await api.getChildren(info.parentId);
+            if (info.index >= siblings.length-1) {
+                // Item creation could be split into stages: create at the last
+                // position, move elsewhere. It happens with folders. To deal
+                // with it, wait for some time after the "created" event and
+                // check if the position has changed. If the item is still the
+                // last, move to the top.
+                setTimeout(async () => {
+                    let query = await api.get(id);
+                    if (info.index === query[0].index) {
+                        topit(id, info);
+                    }
+                }, 100);
             }
-        }, function (e) {
-            log(`rejected: ${e}`);
-        });
+        } catch (e) {
+            log(`error: ${e}`);
+        }
     }
 
-    api.onCreated.addListener(created);
-    api.onMoved.addListener(moved);
+    async function onMoved(id, info) {
+        try {
+            let AB = (info.parentId === info.oldParentId) ? "A" : "B";
+            log(`ev: moved A:${info.oldIndex} => ${AB}:${info.index}`);
+
+            // Nothing to do if moved to the top
+            if (!info.index) return;
+
+            let siblings = await api.getChildren(info.parentId);
+            if (info.index >= siblings.length-1) {
+                topit(id, info);
+            }
+        } catch (e) {
+            log(`error: ${e}`);
+        }
+    }
+
+    api.onCreated.addListener(onCreated);
+    api.onMoved.addListener(onMoved);
+
 })(browser.bookmarks);
