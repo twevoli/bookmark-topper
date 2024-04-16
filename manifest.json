@@ -1,8 +1,8 @@
 {
 	"manifest_version": 2,
 	"name": "Bookmark topper",
-	"version": "0.1",
-	"author": "dandelionred",
+	"version": "0.2",
+	"author": "twevoli",
 	"description": "Move bookmarks from the very bottom to the top",
 	"icons": {
 		"64": "icon-64.png"
