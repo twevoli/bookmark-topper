@@ -5,8 +5,8 @@
     "author": "twevoli",
     "description": "Move bookmarks from the very bottom to the top",
     "icons": {
-        "32": "icon-32.png"
-        "64": "icon-64.png"
+        "32": "icon-32.png",
+        "64": "icon-64.png",
         "128": "icon-128.png"
     },
     "permissions": [
